@@ -23,6 +23,15 @@ def bg_keyboard() -> InlineKeyboardMarkup:
     return b.as_markup()
 
 
+def format_keyboard() -> InlineKeyboardMarkup:
+    """Step 2 — choose card format (aspect ratio)."""
+    b = InlineKeyboardBuilder()
+    b.button(text="📱 Вертикальная  1080×1350", callback_data="format:vertical")
+    b.button(text="⬛ Квадратная    1080×1080", callback_data="format:square")
+    b.adjust(1)
+    return b.as_markup()
+
+
 def layout_keyboard() -> InlineKeyboardMarkup:
     """Step 2 — choose text position."""
     b = InlineKeyboardBuilder()

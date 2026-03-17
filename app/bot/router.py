@@ -4,12 +4,13 @@ Telegram bot — card creation wizard (FSM).
 Flow:
     /start
     → «Создать карточку»
-    → Step 1: выбор фона (кнопки)
+    → Step 1:  выбор фона (кнопки)
     → Step 1b: загрузка изображения как FILE/DOCUMENT (PNG или JPG)
-    → Step 2: положение текста
-    → Step 3: ввод заголовка
-    → Step 4: ввод подзаголовка (или /skip)
-    → Step 5: ввод тега (или /skip) → рендер → PNG-документ
+    → Step 2:  выбор формата (1080×1350 / 1080×1080)
+    → Step 3:  положение текста
+    → Step 4:  ввод заголовка
+    → Step 5:  ввод подзаголовка (или /skip)
+    → Step 6:  ввод тега (или /skip) → рендер → PNG-документ
 """
 from __future__ import annotations
 
@@ -22,7 +23,7 @@ from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import BufferedInputFile, CallbackQuery, Message
 
-from app.bot.keyboards import bg_keyboard, layout_keyboard, start_keyboard
+from app.bot.keyboards import bg_keyboard, format_keyboard, layout_keyboard, start_keyboard
 from app.bot.states import CardWizard
 from app.config import settings
 from app.services.card_spec import BackgroundMode, CardSpec, TextLayout
@@ -68,9 +69,9 @@ async def start_wizard(message: Message, state: FSMContext) -> None:
 async def choose_gradient(callback: CallbackQuery, state: FSMContext) -> None:
     gradient_id = callback.data.split(":")[1]  # e.g. "gradient_1"
     await state.update_data(bg_type="gradient", bg_value=gradient_id)
-    await state.set_state(CardWizard.choosing_layout)
+    await state.set_state(CardWizard.choosing_format)
     await callback.message.edit_text(
-        "Положение текста на карточке:", reply_markup=layout_keyboard()
+        "Выберите формат карточки:", reply_markup=format_keyboard()
     )
     await callback.answer()
 
@@ -111,8 +112,8 @@ async def receive_document(message: Message, state: FSMContext, bot: Bot) -> Non
     await bot.download_file(tg_file.file_path, destination=tmp_path)
 
     await state.update_data(bg_type="photo", bg_value=str(tmp_path))
-    await state.set_state(CardWizard.choosing_layout)
-    await message.answer("Положение текста на карточке:", reply_markup=layout_keyboard())
+    await state.set_state(CardWizard.choosing_format)
+    await message.answer("Выберите формат карточки:", reply_markup=format_keyboard())
 
 
 # Если пользователь отправил сжатое фото вместо документа
@@ -135,7 +136,27 @@ async def document_wrong_type(message: Message) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Step 2: положение текста
+# Step 2: формат карточки
+# ---------------------------------------------------------------------------
+
+_FORMAT_SIZES = {
+    "vertical": (1080, 1350),
+    "square":   (1080, 1080),
+}
+
+@router.callback_query(CardWizard.choosing_format, F.data.startswith("format:"))
+async def choose_format(callback: CallbackQuery, state: FSMContext) -> None:
+    fmt = callback.data.split(":")[1]  # "vertical" | "square"
+    await state.update_data(card_format=fmt)
+    await state.set_state(CardWizard.choosing_layout)
+    await callback.message.edit_text(
+        "Положение текста на карточке:", reply_markup=layout_keyboard()
+    )
+    await callback.answer()
+
+
+# ---------------------------------------------------------------------------
+# Step 3: положение текста
 # ---------------------------------------------------------------------------
 
 @router.callback_query(CardWizard.choosing_layout, F.data.startswith("layout:"))
@@ -204,7 +225,11 @@ async def enter_tag(message: Message, state: FSMContext) -> None:
         bg_type  = data["bg_type"]   # "photo" | "gradient"
         bg_value = data["bg_value"]
 
+        fmt = data.get("card_format", "vertical")
+        w, h = _FORMAT_SIZES.get(fmt, (1080, 1350))
+
         spec = CardSpec(
+            size={"width": w, "height": h},
             title=data["title"],
             subtitle=data.get("subtitle"),
             tag=tag,

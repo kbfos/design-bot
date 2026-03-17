@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="{{ canvas_w }}" height="{{ canvas_h }}"
+     viewBox="0 0 {{ canvas_w }} {{ canvas_h }}">
+
+  <!--
+    card_v1_1080x1350.svg
+
+    Layout (top→down, vertically centred as a group):
+      [TAG pill]   id=tag_bg / id=tag
+        ↕ gap
+      [TITLE]      id=title
+        ↕ gap
+      [SUBTITLE]   id=subtitle
+
+    Context comes from renderer.py + card_v1.json:
+      c_bg, c_title, c_sub, c_tag_bg, c_tag_fg  — resolved palette colours
+      pad, gap                                    — layout spacing (px)
+      style_title, style_subtitle, style_tag      — font style dicts
+      canvas_w, canvas_h                          — canvas dimensions
+      title, subtitle, tag                        — text content
+      bg_color                                    — None when photo/gradient bg
+      text_layout                                 — "top" | "center" | "bottom"
+  -->
+
+  <!-- ── Dynamic layout with vertical centering ────────────────── -->
+  {% set title_lh = style_title.line_height %}
+  {% set sub_lh   = style_subtitle.line_height %}
+  {% set tag_h    = style_tag.line_height %}
+
+  {% set t_lines = title    | word_wrap(style_title.line_chars,    style_title.max_lines) %}
+  {% set s_lines = subtitle | word_wrap(style_subtitle.line_chars, style_subtitle.max_lines) if subtitle else [] %}
+
+  {# Total content block height for vertical centering #}
+  {% set total_h = (tag_h + gap if tag else 0)
+                 + (t_lines | length) * title_lh
+                 + (gap + (s_lines | length) * sub_lh if subtitle else 0) %}
+  {% if text_layout == "top" %}
+  {% set start_y = pad %}
+  {% elif text_layout == "bottom" %}
+  {% set start_y = [pad, canvas_h - total_h - pad] | max %}
+  {% else %}
+  {% set start_y = [pad, ((canvas_h - total_h) / 2) | int] | max %}
+  {% endif %}
+
+  {% set tag_y   = start_y %}
+  {% set title_y = start_y + (tag_h + gap if tag else 0) %}
+  {% set sub_y   = title_y + (t_lines | length) * title_lh + gap %}
+  {% set cx      = (canvas_w / 2) | int %}
+
+  <!-- ── 1. Background ─────────────────────────────────────────── -->
+  {% if bg_color %}
+  <rect id="bg" width="{{ canvas_w }}" height="{{ canvas_h }}" fill="{{ bg_color }}"/>
+  {% else %}
+  {# Photo composited by Pillow; semi-transparent overlay for legibility #}
+  <rect id="bg" width="{{ canvas_w }}" height="{{ canvas_h }}" fill="rgba(0,0,0,0.45)"/>
+  {% endif %}
+
+  <!-- ── 2. Tag ────────────────────────────────────────────────── -->
+  {% if tag %}
+  {% set char_w = (style_tag.font_size * 0.55) | int %}
+  {% set pill_w = (tag | length) * char_w + 48 %}
+  {% set pill_x = ((canvas_w - pill_w) / 2) | int %}
+  <rect id="tag_bg"
+        x="{{ pill_x }}" y="{{ tag_y }}"
+        width="{{ pill_w }}" height="{{ tag_h }}"
+        rx="12"
+        fill="{{ c_tag_bg }}"/>
+  <text id="tag"
+        x="{{ cx }}" y="{{ tag_y + (tag_h // 2) }}"
+        font-family="{{ style_tag.font_family | safe }}"
+        font-size="{{ style_tag.font_size }}" font-weight="{{ style_tag.font_weight }}"
+        fill="{{ c_tag_fg }}"
+        text-anchor="middle"
+        dominant-baseline="middle">{{ tag }}</text>
+  {% endif %}
+
+  <!-- ── 3. Title ──────────────────────────────────────────────── -->
+  <text id="title"
+        font-family="{{ style_title.font_family | safe }}"
+        font-size="{{ style_title.font_size }}" font-weight="{{ style_title.font_weight }}"
+        fill="{{ c_title }}"
+        text-anchor="middle"
+        dominant-baseline="hanging">
+    {% for line in t_lines %}
+    <tspan x="{{ cx }}"
+           {% if loop.first %}y="{{ title_y }}"{% else %}dy="{{ title_lh }}"{% endif %}>{{ line }}</tspan>
+    {% endfor %}
+  </text>
+
+  <!-- ── 4. Subtitle ───────────────────────────────────────────── -->
+  {% if subtitle %}
+  <text id="subtitle"
+        font-family="{{ style_subtitle.font_family | safe }}"
+        font-size="{{ style_subtitle.font_size }}" font-weight="{{ style_subtitle.font_weight }}"
+        fill="{{ c_sub }}"
+        text-anchor="middle"
+        dominant-baseline="hanging">
+    {% for line in s_lines %}
+    <tspan x="{{ cx }}"
+           {% if loop.first %}y="{{ sub_y }}"{% else %}dy="{{ sub_lh }}"{% endif %}>{{ line }}</tspan>
+    {% endfor %}
+  </text>
+  {% endif %}
+
+</svg>

@@ -1,0 +1,36 @@
+# Python
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Environment
+.env
+
+# Generated output
+assets/output/*.png
+assets/output/_grad_*.png
+assets/images/tmp_*.jpg
+assets/images/tmp_*.png
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Fonts (licensed, distribute separately)
+assets/fonts/*.otf
+assets/fonts/*.ttf
+
+# Logs
+*.log

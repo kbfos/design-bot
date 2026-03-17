@@ -1,0 +1,14 @@
+<svg width="1080" height="1080" viewBox="0 0 1080 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="1080" height="1080" fill="#C1C1C1"/>
+<g id="card_v1_1080x1080" clip-path="url(#clip0_2363_81)">
+<path id="bg" d="M1080 0H0V1080H1080V0Z" fill="black" fill-opacity="0.4"/>
+<text id="title" fill="black" style="white-space: pre" xml:space="preserve" font-family="Panama" font-size="96" letter-spacing="0em"><tspan x="425.484" y="236">Title</tspan></text>
+<text id="subtitle" fill="black" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="40" letter-spacing="0em"><tspan x="470.109" y="361.545">subtitle</tspan></text>
+<text id="tag" fill="black" style="white-space: pre" xml:space="preserve" font-family="Inter" font-size="24" font-weight="500" letter-spacing="0em"><tspan x="521.297" y="83.2273">tag</tspan></text>
+</g>
+<defs>
+<clipPath id="clip0_2363_81">
+<rect width="1080" height="1080" fill="white"/>
+</clipPath>
+</defs>
+</svg>

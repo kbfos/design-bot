@@ -1,0 +1,17 @@
+[Unit]
+Description=Design Bot — Telegram card generator
+After=network.target
+
+[Service]
+Type=simple
+User=designbot
+WorkingDirectory=/opt/design-bot
+EnvironmentFile=/opt/design-bot/.env
+ExecStart=/opt/design-bot/venv/bin/python main.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

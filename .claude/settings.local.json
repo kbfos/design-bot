@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//opt/homebrew/bin/**)",
+      "Read(//opt/homebrew/opt/**)",
+      "Bash(DYLD_LIBRARY_PATH=/opt/homebrew/lib python3 -c \"import cairosvg; print\\(''cairosvg OK''\\)\")",
+      "Bash(resvg --version)",
+      "Bash(brew list:*)",
+      "Bash(python3 -c \"import sys; print\\(sys.executable, sys.version\\)\")",
+      "Bash(python3 -m venv /tmp/design_bot_test_venv)",
+      "Bash(/tmp/design_bot_test_venv/bin/pip install:*)",
+      "Bash(DYLD_LIBRARY_PATH=/opt/homebrew/lib /tmp/design_bot_test_venv/bin/python -c \"import cairosvg; print\\(''''OK''''\\)\")",
+      "Bash(chmod +x /Users/kbfos/design-bot/run.sh)",
+      "Bash(DYLD_LIBRARY_PATH=/opt/homebrew/lib venv/bin/python render_test.py)"
+    ]
+  }
+}

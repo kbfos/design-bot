@@ -1,0 +1,41 @@
+{
+  "spacing": {
+    "pad": 40,
+    "gap": 64
+  },
+  "tag": {
+    "height": 48,
+    "font_size": 24,
+    "font_family": "'Inter', 'Arial', sans-serif"
+  },
+  "title": {
+    "font_size": 96,
+    "line_height": 106,
+    "font_family": "'Panama', 'Arial Black', sans-serif",
+    "word_wrap_width": 20,
+    "word_wrap_lines": 2
+  },
+  "subtitle": {
+    "font_size": 40,
+    "line_height": 48,
+    "font_family": "'Inter', 'Arial', sans-serif",
+    "word_wrap_width": 25,
+    "word_wrap_lines": 2
+  },
+  "palette": {
+    "dark": {
+      "bg":     "#1A1A2E",
+      "title":  "#FFFFFF",
+      "sub":    "#AAAACC",
+      "tag_bg": "#2E2E4E",
+      "tag_fg": "#E8C547"
+    },
+    "light": {
+      "bg":     "#F5F5F0",
+      "title":  "#111111",
+      "sub":    "#555555",
+      "tag_bg": "#E8F0FE",
+      "tag_fg": "#1A73E8"
+    }
+  }
+}

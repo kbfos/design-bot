@@ -29,15 +29,15 @@
   },
   "styles": {
     "title": {
-      "font_family": "Panama, 'Arial Black', sans-serif",
-      "font_weight": "300",
+      "font_family": "Panama, 'inter', sans-serif",
+      "font_weight": "400",
       "font_size": 96,
       "line_height": 106,
       "line_chars": 20,
-      "max_lines": 2
+      "max_lines": 3
     },
     "subtitle": {
-      "font_family": "Inter, Arial, sans-serif",
+      "font_family": "Inter, sans-serif",
       "font_weight": "400",
       "font_size": 42,
       "line_height": 52,

@@ -13,8 +13,7 @@ build/
 .env
 
 # Generated output
-assets/output/*.png
-assets/output/_grad_*.png
+assets/output/
 assets/images/tmp_*.jpg
 assets/images/tmp_*.png
 

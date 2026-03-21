@@ -1,10 +1,5 @@
 {
   "template_id": "card_v1",
-  "layout": {
-    "padding": 40,
-    "spacing": 64,
-    "align": "center"
-  },
   "slots": {
     "tag": {
       "type": "text",
@@ -25,48 +20,6 @@
     },
     "bg": {
       "type": "background"
-    }
-  },
-  "styles": {
-    "title": {
-      "font_family": "Panama, 'inter', sans-serif",
-      "font_weight": "400",
-      "font_size": 96,
-      "line_height": 106,
-      "line_chars": 20,
-      "max_lines": 3
-    },
-    "subtitle": {
-      "font_family": "Inter, sans-serif",
-      "font_weight": "400",
-      "font_size": 42,
-      "line_height": 52,
-      "line_chars": 25,
-      "max_lines": 2
-    },
-    "tag": {
-      "font_family": "Inter, Arial, sans-serif",
-      "font_weight": "400",
-      "font_size": 28,
-      "line_height": 48,
-      "line_chars": 40,
-      "max_lines": 1
-    }
-  },
-  "palettes": {
-    "light": {
-      "bg":     "#ffffff",
-      "text":   "#111111",
-      "sub":    "#555555",
-      "tag_bg": "#eeeeee",
-      "tag_fg": "#333333"
-    },
-    "dark": {
-      "bg":     "#000000",
-      "text":   "#ffffff",
-      "sub":    "#aaaaaa",
-      "tag_bg": "#222222",
-      "tag_fg": "#eeeeee"
     }
   },
   "background": {

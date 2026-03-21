@@ -1,0 +1,106 @@
+{
+  "meta": {
+    "comment":    "Single source of truth for all design values. Synced with Figma.",
+    "figma_file": "TNxzY2kwn5cJmLKgnT6EYF",
+    "figma_node": "3:521"
+  },
+
+  "themes": {
+    "light": {
+      "bg":       "#ffffff",
+      "title":    "#111111",
+      "subtitle": "#555555"
+    },
+    "dark": {
+      "bg":               "#000000",
+      "title":            "#ffffff",
+      "subtitle":         "#aaaaaa",
+      "tag_border_color": "#ffffff",
+      "tag_text_color":   "#ffffff"
+    },
+    "photo": {
+      "overlay":          "rgba(0,0,0,0.5)",
+      "title":            "#ffffff",
+      "subtitle":         "#dddddd",
+      "tag_border_color": "#ffffff",
+      "tag_text_color":   "#ffffff"
+    }
+  },
+
+  "primitives": {
+    "typography": {
+      "title": {
+        "font_family":    "Panama, 'Arial Black', sans-serif",
+        "font_weight":    "400",
+        "font_size":      104,
+        "letter_spacing": -3.12,
+        "line_height":    104
+      },
+      "subtitle": {
+        "font_family": "Inter, Arial, sans-serif",
+        "font_weight": "400",
+        "font_size":   40,
+        "line_height": 48
+      },
+      "tag": {
+        "font_family": "Inter, Arial, sans-serif",
+        "font_weight": 400,
+        "font_size":   24
+      }
+    },
+    "shape": {
+      "tag": {
+        "padding_h":    32,
+        "padding_v":    16,
+        "border_width": 2,
+        "radius_mode":  "full",
+        "style":        "outline"
+      }
+    }
+  },
+
+  "components": {
+    "title": {
+      "$typography": "primitives.typography.title",
+      "line_chars":  18,
+      "max_lines":   3
+    },
+    "subtitle": {
+      "$typography": "primitives.typography.subtitle",
+      "line_chars":  25,
+      "max_lines":   2
+    },
+    "tag": {
+      "$typography": "primitives.typography.tag",
+      "$shape":      "primitives.shape.tag",
+      "colors": {
+        "border_color":     "#000000",
+        "text_color":       "#000000",
+        "background_color": "transparent"
+      },
+      "max_lines": 1
+    }
+  },
+
+  "layout": {
+    "padding": 40,
+    "spacing": 64
+  },
+
+  "gradients": {
+    "gradient_1": { "name": "Blue → Purple", "start": "#1a1a2e", "end": "#533483" },
+    "gradient_2": { "name": "Navy → Teal",   "start": "#0f3460", "end": "#16a085" },
+    "gradient_3": { "name": "Indigo → Rose", "start": "#2d1b69", "end": "#ba4949" }
+  },
+
+  "render_rules": {
+    "tag": {
+      "pill_width":    "measured",
+      "radius":        "half_height"
+    },
+    "text": {
+      "layout_modes":  ["top", "center", "bottom"],
+      "default_layout": "center"
+    }
+  }
+}

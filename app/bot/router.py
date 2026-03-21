@@ -4,13 +4,14 @@ Telegram bot — card creation wizard (FSM).
 Flow:
     /start
     → «Создать карточку»
-    → Step 1:  выбор фона (кнопки)
-    → Step 1b: загрузка изображения как FILE/DOCUMENT (PNG или JPG)
-    → Step 2:  выбор формата (1080×1350 / 1080×1080)
-    → Step 3:  положение текста
-    → Step 4:  ввод заголовка
-    → Step 5:  ввод подзаголовка (или /skip)
-    → Step 6:  ввод тега (или /skip) → рендер → PNG-документ
+    → Step 1:  выбор темы (light / dark)
+    → Step 2:  выбор фона (фото / градиент)
+    → Step 2b: загрузка изображения как FILE/DOCUMENT (PNG или JPG)
+    → Step 3:  выбор формата (1080×1350 / 1080×1080)
+    → Step 4:  положение текста
+    → Step 5:  ввод заголовка
+    → Step 6:  ввод подзаголовка (или /skip)
+    → Step 7:  ввод тега (или /skip) → рендер → PNG-документ
 """
 from __future__ import annotations
 
@@ -23,10 +24,10 @@ from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import BufferedInputFile, CallbackQuery, Message
 
-from app.bot.keyboards import bg_keyboard, format_keyboard, layout_keyboard, start_keyboard
+from app.bot.keyboards import bg_keyboard, format_keyboard, layout_keyboard, start_keyboard, theme_keyboard
 from app.bot.states import CardWizard
 from app.config import settings
-from app.services.card_spec import BackgroundMode, CardSpec, TextLayout
+from app.services.card_spec import BackgroundMode, CardSpec, Palette, TextLayout
 from app.services.renderer import render_card
 from app.templates.engine import TemplateVariantNotFound
 
@@ -57,17 +58,32 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
 
 @router.message(F.text == "🎨 Создать карточку")
 async def start_wizard(message: Message, state: FSMContext) -> None:
-    await state.set_state(CardWizard.choosing_bg)
-    await message.answer("Выберите фон для карточки:", reply_markup=bg_keyboard())
+    await state.set_state(CardWizard.choosing_theme)
+    await message.answer("Выберите тему карточки:", reply_markup=theme_keyboard())
 
 
 # ---------------------------------------------------------------------------
-# Step 1a: выбор градиента
+# Step 1: выбор темы
+# ---------------------------------------------------------------------------
+
+@router.callback_query(CardWizard.choosing_theme, F.data.startswith("theme:"))
+async def choose_theme(callback: CallbackQuery, state: FSMContext) -> None:
+    palette = callback.data.split(":")[1]   # "light" | "dark"
+    await state.update_data(theme=palette)
+    await state.set_state(CardWizard.choosing_bg)
+    await callback.message.edit_text(
+        "Выберите фон для карточки:", reply_markup=bg_keyboard()
+    )
+    await callback.answer()
+
+
+# ---------------------------------------------------------------------------
+# Step 2a: выбор градиента
 # ---------------------------------------------------------------------------
 
 @router.callback_query(CardWizard.choosing_bg, F.data.startswith("bg:gradient_"))
 async def choose_gradient(callback: CallbackQuery, state: FSMContext) -> None:
-    gradient_id = callback.data.split(":")[1]  # e.g. "gradient_1"
+    gradient_id = callback.data.split(":")[1]   # e.g. "gradient_1"
     await state.update_data(bg_type="gradient", bg_value=gradient_id)
     await state.set_state(CardWizard.choosing_format)
     await callback.message.edit_text(
@@ -77,7 +93,7 @@ async def choose_gradient(callback: CallbackQuery, state: FSMContext) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Step 1b: выбор фото — запрос загрузки как документа
+# Step 2b: выбор фото — запрос загрузки как документа
 # ---------------------------------------------------------------------------
 
 @router.callback_query(CardWizard.choosing_bg, F.data == "bg:photo")
@@ -91,7 +107,7 @@ async def choose_photo(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.answer()
 
 
-# Step 1b: приём документа (PNG / JPG)
+# Step 2b: приём документа (PNG / JPG)
 @router.message(CardWizard.waiting_for_photo, F.document)
 async def receive_document(message: Message, state: FSMContext, bot: Bot) -> None:
     doc = message.document
@@ -104,7 +120,6 @@ async def receive_document(message: Message, state: FSMContext, bot: Bot) -> Non
         )
         return
 
-    # Determine file extension from MIME
     ext = "png" if mime == "image/png" else "jpg"
     tmp_path = settings.output_dir / f"tmp_{message.from_user.id}.{ext}"
 
@@ -136,7 +151,7 @@ async def document_wrong_type(message: Message) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Step 2: формат карточки
+# Step 3: формат карточки
 # ---------------------------------------------------------------------------
 
 _FORMAT_SIZES = {
@@ -146,7 +161,7 @@ _FORMAT_SIZES = {
 
 @router.callback_query(CardWizard.choosing_format, F.data.startswith("format:"))
 async def choose_format(callback: CallbackQuery, state: FSMContext) -> None:
-    fmt = callback.data.split(":")[1]  # "vertical" | "square"
+    fmt = callback.data.split(":")[1]   # "vertical" | "square"
     await state.update_data(card_format=fmt)
     await state.set_state(CardWizard.choosing_layout)
     await callback.message.edit_text(
@@ -156,12 +171,12 @@ async def choose_format(callback: CallbackQuery, state: FSMContext) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Step 3: положение текста
+# Step 4: положение текста
 # ---------------------------------------------------------------------------
 
 @router.callback_query(CardWizard.choosing_layout, F.data.startswith("layout:"))
 async def choose_layout(callback: CallbackQuery, state: FSMContext) -> None:
-    layout = callback.data.split(":")[1]  # "top" | "center" | "bottom"
+    layout = callback.data.split(":")[1]   # "top" | "center" | "bottom"
     await state.update_data(text_layout=layout)
     await state.set_state(CardWizard.entering_title)
     await callback.message.edit_text("Введите заголовок:")
@@ -169,7 +184,7 @@ async def choose_layout(callback: CallbackQuery, state: FSMContext) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Step 3: заголовок
+# Step 5: заголовок
 # ---------------------------------------------------------------------------
 
 @router.message(CardWizard.entering_title, F.text)
@@ -190,7 +205,7 @@ async def enter_title(message: Message, state: FSMContext) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Step 4: подзаголовок
+# Step 6: подзаголовок
 # ---------------------------------------------------------------------------
 
 @router.message(CardWizard.entering_subtitle, F.text)
@@ -209,7 +224,7 @@ async def enter_subtitle(message: Message, state: FSMContext) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Step 5: тег → рендер → отправить как Document
+# Step 7: тег → рендер → отправить как Document
 # ---------------------------------------------------------------------------
 
 @router.message(CardWizard.entering_tag, F.text)
@@ -222,8 +237,9 @@ async def enter_tag(message: Message, state: FSMContext) -> None:
 
     status = await message.answer("⏳ Генерирую карточку...")
     try:
-        bg_type  = data["bg_type"]   # "photo" | "gradient"
+        bg_type  = data["bg_type"]    # "photo" | "gradient"
         bg_value = data["bg_value"]
+        palette  = Palette(data.get("theme", "dark"))
 
         fmt = data.get("card_format", "vertical")
         w, h = _FORMAT_SIZES.get(fmt, (1080, 1350))
@@ -233,6 +249,7 @@ async def enter_tag(message: Message, state: FSMContext) -> None:
             title=data["title"],
             subtitle=data.get("subtitle"),
             tag=tag,
+            palette=palette,
             text_layout=TextLayout(data.get("text_layout", "center")),
             background_mode=(
                 BackgroundMode.FILE if bg_type == "photo"
@@ -250,7 +267,6 @@ async def enter_tag(message: Message, state: FSMContext) -> None:
         path = await loop.run_in_executor(None, render_card, spec)
 
         png_bytes = path.read_bytes()
-        # Send as Document to preserve full quality
         doc_file = BufferedInputFile(png_bytes, filename=path.name)
         await message.answer_document(doc_file)
 

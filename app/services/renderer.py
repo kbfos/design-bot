@@ -7,14 +7,18 @@ Background image flow:
   2. cairosvg produces a PNG with transparent background areas
   3. Pillow opens the background image, crops/resizes to fill target size
   4. Pillow pastes the SVG layer on top → final RGB PNG
+
+All design values (colours, typography, spacing, gradients) are loaded from
+assets/design_tokens.json — the single source of truth synced with Figma.
 """
 from __future__ import annotations
 
+import json
 import uuid
 from pathlib import Path
 from typing import Optional
 
-from PIL import Image
+from PIL import Image, ImageFont
 
 from app.config import settings
 from app.services.card_spec import BackgroundMode, CardSpec
@@ -24,15 +28,71 @@ from app.templates.engine import load_template_config, render_svg
 CARD_TEMPLATE_ID = "card_v1"
 
 # ---------------------------------------------------------------------------
-# Gradient definitions
+# Design tokens — loaded once at startup
 # ---------------------------------------------------------------------------
 
-# Each entry: (top_colour_rgb, bottom_colour_rgb)
+def _load_design_tokens() -> dict:
+    path = settings.assets_dir / "design_tokens.json"
+    with path.open(encoding="utf-8") as f:
+        return json.load(f)
+
+_TOKENS: dict = _load_design_tokens()
+
+
+def _hex_to_rgb(h: str) -> tuple[int, int, int]:
+    h = h.lstrip("#")
+    return int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+
+
+def _resolve_component(name: str) -> dict:
+    """
+    Resolve a component spec into a flat dict, ready for template injection.
+
+    $-prefixed keys are dot-path references into _TOKENS (e.g.
+    "$typography": "primitives.typography.title" → merged in-place).
+    Nested dict values (e.g. "colors": {...}) are flattened one level.
+    """
+    result: dict = {}
+    for key, val in _TOKENS["components"][name].items():
+        if key.startswith("$"):
+            node: dict = _TOKENS
+            for segment in val.split("."):
+                node = node[segment]  # type: ignore[assignment]
+            result.update(node)
+        elif isinstance(val, dict):
+            result.update(val)          # flatten sub-objects (e.g. colors)
+        else:
+            result[key] = val
+    return result
+
+
+# Gradients built from design_tokens.json
 GRADIENTS: dict[str, tuple[tuple[int, int, int], tuple[int, int, int]]] = {
-    "gradient_1": ((26, 26, 46),   (83, 52, 131)),   # deep blue → purple
-    "gradient_2": ((15, 52, 96),   (22, 160, 133)),  # navy → teal
-    "gradient_3": ((45, 27, 105),  (186, 73, 73)),   # indigo → rose
+    gid: (_hex_to_rgb(g["start"]), _hex_to_rgb(g["end"]))
+    for gid, g in _TOKENS["gradients"].items()
 }
+
+
+_TAG_FONT_SEARCH = [
+    Path.home() / "Library/Fonts/Inter-Regular.otf",
+    Path("/Library/Fonts/Inter-Regular.otf"),
+    Path("/System/Library/Fonts/Supplemental/Arial.ttf"),
+]
+
+
+def _load_tag_font(font_size: int) -> ImageFont.FreeTypeFont:
+    for p in _TAG_FONT_SEARCH:
+        if p.exists():
+            return ImageFont.truetype(str(p), font_size)
+    return ImageFont.load_default(size=font_size)
+
+
+def _measure_tag_pill(text: str, font_size: int, padding_h: int) -> int:
+    """Return pill width = measured text width + horizontal padding on both sides."""
+    font = _load_tag_font(font_size)
+    bbox = font.getbbox(text)          # (left, top, right, bottom)
+    text_w = bbox[2] - bbox[0]
+    return text_w + padding_h * 2
 
 
 def _generate_gradient_png(
@@ -144,88 +204,82 @@ def _build_context(spec: CardSpec, has_bg_image: bool, template_config: dict) ->
     """
     Map CardSpec fields to Jinja2 template variables.
 
-    Values from template_config (template.json) take precedence over built-in
-    defaults, so designers can change fonts, colours and spacing via JSON
-    without touching either the renderer or the SVG templates.
+    All design values come from assets/design_tokens.json (single source of
+    truth synced with Figma). template_config is kept for structural metadata
+    only (slots, background modes).
     """
     palette_name = spec.palette.value  # "light" or "dark"
 
-    # ── Palette colours ───────────────────────────────────────────────────────
-    # Fallback values match the legacy hardcoded SVG colours
-    _fallback: dict[str, dict] = {
-        "dark":  {"bg": "#1A1A2E", "text": "#FFFFFF", "sub": "#AAAACC",
-                  "tag_bg": "#2E2E4E", "tag_fg": "#E8C547"},
-        "light": {"bg": "#F5F5F0", "text": "#111111", "sub": "#555555",
-                  "tag_bg": "#E8F0FE", "tag_fg": "#1A73E8"},
-    }
-    pal = template_config.get("palettes", {}).get(palette_name, {})
-    fb  = _fallback[palette_name]
+    # ── Theme colours — from design_tokens.json → themes ──────────────────────
+    theme = _TOKENS["themes"][palette_name]
 
-    c_bg     = pal.get("bg",     fb["bg"])
-    c_title  = pal.get("text",   fb["text"])
-    c_sub    = pal.get("sub",    fb["sub"])
-    c_tag_bg = pal.get("tag_bg", fb["tag_bg"])
-    c_tag_fg = pal.get("tag_fg", fb["tag_fg"])
+    c_bg    = theme["bg"]
+    c_title = theme["title"]
+    c_sub   = theme["subtitle"]
 
-    # ── Background colour for the SVG rect ────────────────────────────────────
+    # ── Resolved component specs (primitives merged, colors flattened) ─────────
+    tag_style = _resolve_component("tag")
+
+    # Tag colours: theme overrides (dark/photo) take precedence over component defaults
+    c_tag_border = theme.get("tag_border_color", tag_style["border_color"])
+    c_tag_text   = theme.get("tag_text_color",   tag_style["text_color"])
+
+    # ── Background colour / photo overlay ─────────────────────────────────────
+    photo = _TOKENS["themes"]["photo"]
     if has_bg_image:
-        bg_color = None
-        # Dark overlay (rgba(0,0,0,0.45) in SVG) makes light text mandatory
-        c_title  = "#FFFFFF"
-        c_sub    = "#DDDDDD"
-        c_tag_bg = "#FFFFFF"
-        c_tag_fg = "#111111"
+        bg_color     = None
+        bg_overlay   = photo["overlay"]
+        c_title      = photo["title"]
+        c_sub        = photo["subtitle"]
+        c_tag_border = photo.get("tag_border_color", tag_style["border_color"])
+        c_tag_text   = photo.get("tag_text_color",   tag_style["text_color"])
     else:
-        bg_color = spec.bg_color or c_bg
+        bg_color   = spec.bg_color or c_bg
+        bg_overlay = photo["overlay"]  # passed to template but unused when bg_color is set
 
-    # ── Layout ────────────────────────────────────────────────────────────────
-    layout = template_config.get("layout", {})
-    pad    = layout.get("padding", 40)
-    gap    = layout.get("spacing", 64)
+    # ── Layout — from design_tokens.json ──────────────────────────────────────
+    layout = _TOKENS["layout"]
+    pad    = layout["padding"]
+    gap    = layout["spacing"]
 
-    # ── Font styles ───────────────────────────────────────────────────────────
-    _default_styles: dict[str, dict] = {
-        "title":    {"font_family": "'Panama', 'Arial Black', sans-serif",
-                     "font_weight": "700", "font_size": 96,
-                     "line_height": 106, "line_chars": 20, "max_lines": 2},
-        "subtitle": {"font_family": "'Inter', Arial, sans-serif",
-                     "font_weight": "400", "font_size": 40,
-                     "line_height": 48,  "line_chars": 25, "max_lines": 2},
-        "tag":      {"font_family": "'Inter', Arial, sans-serif",
-                     "font_weight": "600", "font_size": 24,
-                     "line_height": 48,  "line_chars": 40, "max_lines": 1},
-    }
-    json_styles = template_config.get("styles", {})
-    style_title    = json_styles.get("title",    _default_styles["title"])
-    style_subtitle = json_styles.get("subtitle", _default_styles["subtitle"])
-    style_tag      = json_styles.get("tag",      _default_styles["tag"])
+    # ── Tag geometry — measured precisely, not estimated ──────────────────────
+    tag_h  = tag_style["font_size"] + tag_style["padding_v"] * 2
+    tag_rx = tag_h // 2
+    pill_w = (
+        _measure_tag_pill(spec.tag, tag_style["font_size"], tag_style["padding_h"])
+        if spec.tag else 0
+    )
 
     return {
         # ── Content ───────────────────────────────────────────────────────────
         "title":    spec.title,
         "subtitle": spec.subtitle or "",
         "tag":      spec.tag or "",
-        # ── Legacy vars (backward-compat with old SVG templates) ──────────────
-        "palette":  palette_name,
-        "bg_color": bg_color,
-        # ── Resolved palette colours ──────────────────────────────────────────
-        "c_bg":     c_bg,
-        "c_title":  c_title,
-        "c_sub":    c_sub,
-        "c_tag_bg": c_tag_bg,
-        "c_tag_fg": c_tag_fg,
+        # ── Theme info ────────────────────────────────────────────────────────
+        "palette":     palette_name,
+        "bg_color":    bg_color,
+        "bg_overlay":  bg_overlay,
+        # ── Resolved theme colours ────────────────────────────────────────────
+        "c_bg":         c_bg,
+        "c_title":      c_title,
+        "c_sub":        c_sub,
+        "c_tag_border": c_tag_border,
+        "c_tag_text":   c_tag_text,
         # ── Layout ────────────────────────────────────────────────────────────
         "pad": pad,
         "gap": gap,
-        # ── Font styles (dicts) ───────────────────────────────────────────────
-        "style_title":    style_title,
-        "style_subtitle": style_subtitle,
-        "style_tag":      style_tag,
+        # ── Component specs (flat dicts, resolved from primitives) ────────────
+        "style_title":    _resolve_component("title"),
+        "style_subtitle": _resolve_component("subtitle"),
+        "style_tag":      tag_style,
+        # ── Tag geometry (pre-computed) ───────────────────────────────────────
+        "pill_w":  pill_w,
+        "tag_rx":  tag_rx,
         # ── Canvas size ───────────────────────────────────────────────────────
         "canvas_w": spec.size.width,
         "canvas_h": spec.size.height,
         # ── Text position ─────────────────────────────────────────────────────
-        "text_layout": spec.text_layout.value,  # "top" | "center" | "bottom"
+        "text_layout": spec.text_layout.value,
     }
 
 

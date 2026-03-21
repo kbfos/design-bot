@@ -1,0 +1,228 @@
+{
+  "_comment": "Design Bot — Figma Variables. Import via plugin 'Variables Import/Export' (community).",
+  "_source": "card_v1.json + renderer.py GRADIENTS + SVG templates",
+
+  "collections": [
+
+    {
+      "name": "Card / Colors",
+      "modes": ["Light", "Dark", "On Photo"],
+      "variables": [
+        {
+          "name": "Background",
+          "type": "color",
+          "values": {
+            "Light":    "#ffffff",
+            "Dark":     "#000000",
+            "On Photo": "rgba(0,0,0,0.45)"
+          }
+        },
+        {
+          "name": "Title",
+          "type": "color",
+          "values": {
+            "Light":    "#111111",
+            "Dark":     "#ffffff",
+            "On Photo": "#ffffff"
+          }
+        },
+        {
+          "name": "Subtitle",
+          "type": "color",
+          "values": {
+            "Light":    "#555555",
+            "Dark":     "#aaaaaa",
+            "On Photo": "#dddddd"
+          }
+        },
+        {
+          "name": "Tag Stroke",
+          "type": "color",
+          "values": {
+            "Light":    "#111111",
+            "Dark":     "#ffffff",
+            "On Photo": "#ffffff"
+          }
+        },
+        {
+          "name": "Tag Text",
+          "type": "color",
+          "values": {
+            "Light":    "#111111",
+            "Dark":     "#ffffff",
+            "On Photo": "#ffffff"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Card / Gradients",
+      "modes": ["Start", "End"],
+      "variables": [
+        {
+          "name": "Gradient 1 (Blue → Purple)",
+          "type": "color",
+          "values": {
+            "Start": "#1a1a2e",
+            "End":   "#533483"
+          }
+        },
+        {
+          "name": "Gradient 2 (Navy → Teal)",
+          "type": "color",
+          "values": {
+            "Start": "#0f3460",
+            "End":   "#16a085"
+          }
+        },
+        {
+          "name": "Gradient 3 (Indigo → Rose)",
+          "type": "color",
+          "values": {
+            "Start": "#2d1b69",
+            "End":   "#ba4949"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Card / Typography",
+      "modes": ["Value"],
+      "variables": [
+        {
+          "name": "Title/Font Family",
+          "type": "string",
+          "values": { "Value": "Panama" }
+        },
+        {
+          "name": "Title/Font Weight",
+          "type": "float",
+          "values": { "Value": 400 }
+        },
+        {
+          "name": "Title/Font Size",
+          "type": "float",
+          "values": { "Value": 104 }
+        },
+        {
+          "name": "Title/Letter Spacing",
+          "type": "float",
+          "values": { "Value": -3.12 }
+        },
+        {
+          "name": "Title/Line Height",
+          "type": "float",
+          "values": { "Value": 104 }
+        },
+        {
+          "name": "Title/Max Lines",
+          "type": "float",
+          "values": { "Value": 3 }
+        },
+        {
+          "name": "Subtitle/Font Family",
+          "type": "string",
+          "values": { "Value": "Inter" }
+        },
+        {
+          "name": "Subtitle/Font Weight",
+          "type": "float",
+          "values": { "Value": 400 }
+        },
+        {
+          "name": "Subtitle/Font Size",
+          "type": "float",
+          "values": { "Value": 40 }
+        },
+        {
+          "name": "Subtitle/Line Height",
+          "type": "float",
+          "values": { "Value": 48 }
+        },
+        {
+          "name": "Subtitle/Max Lines",
+          "type": "float",
+          "values": { "Value": 2 }
+        },
+        {
+          "name": "Tag/Font Family",
+          "type": "string",
+          "values": { "Value": "Inter" }
+        },
+        {
+          "name": "Tag/Font Weight",
+          "type": "float",
+          "values": { "Value": 400 }
+        },
+        {
+          "name": "Tag/Font Size",
+          "type": "float",
+          "values": { "Value": 24 }
+        },
+        {
+          "name": "Tag/Line Height",
+          "type": "float",
+          "values": { "Value": 64 }
+        }
+      ]
+    },
+
+    {
+      "name": "Card / Spacing",
+      "modes": ["Value"],
+      "variables": [
+        {
+          "name": "Padding",
+          "type": "float",
+          "values": { "Value": 40 }
+        },
+        {
+          "name": "Gap",
+          "type": "float",
+          "values": { "Value": 64 }
+        },
+        {
+          "name": "Tag Pill Radius",
+          "type": "float",
+          "values": { "Value": 50 }
+        },
+        {
+          "name": "Tag Pill Padding Horizontal",
+          "type": "float",
+          "values": { "Value": 32 }
+        },
+        {
+          "name": "Tag Pill Padding Vertical",
+          "type": "float",
+          "values": { "Value": 16 }
+        }
+      ]
+    },
+
+    {
+      "name": "Card / Canvas",
+      "modes": ["Vertical", "Square"],
+      "variables": [
+        {
+          "name": "Width",
+          "type": "float",
+          "values": {
+            "Vertical": 1080,
+            "Square":   1080
+          }
+        },
+        {
+          "name": "Height",
+          "type": "float",
+          "values": {
+            "Vertical": 1350,
+            "Square":   1080
+          }
+        }
+      ]
+    }
+
+  ]
+}

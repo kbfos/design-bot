@@ -5,9 +5,6 @@
   <!--
     card_v1_1080x1080.svg  (square variant — Instagram / VK)
 
-    Same layout as 1080x1350; canvas_h = 1080 so content is vertically
-    centred within the square canvas.
-
     Context comes from renderer.py + card_v1.json:
       c_bg, c_title, c_sub, c_tag_bg, c_tag_fg  — resolved palette colours
       pad, gap                                    — layout spacing (px)
@@ -21,7 +18,7 @@
   <!-- ── Dynamic layout with vertical centering ────────────────── -->
   {% set title_lh = style_title.line_height %}
   {% set sub_lh   = style_subtitle.line_height %}
-  {% set tag_h    = style_tag.line_height %}
+  {% set tag_h    = style_tag.font_size + style_tag.padding_v * 2 %}
 
   {% set t_lines = title    | word_wrap(style_title.line_chars,    style_title.max_lines) %}
   {% set s_lines = subtitle | word_wrap(style_subtitle.line_chars, style_subtitle.max_lines) if subtitle else [] %}
@@ -48,24 +45,24 @@
   <rect id="bg" width="{{ canvas_w }}" height="{{ canvas_h }}" fill="{{ bg_color }}"/>
   {% else %}
   {# Photo composited by Pillow; semi-transparent overlay for legibility #}
-  <rect id="bg" width="{{ canvas_w }}" height="{{ canvas_h }}" fill="rgba(0,0,0,0.45)"/>
+  <rect id="bg" width="{{ canvas_w }}" height="{{ canvas_h }}" fill="{{ bg_overlay }}"/>
   {% endif %}
 
-  <!-- ── 2. Tag ────────────────────────────────────────────────── -->
+  <!-- ── 2. Tag (outline pill) ─────────────────────────────────── -->
   {% if tag %}
-  {% set char_w = (style_tag.font_size * 0.55) | int %}
-  {% set pill_w = (tag | length) * char_w + 48 %}
   {% set pill_x = ((canvas_w - pill_w) / 2) | int %}
   <rect id="tag_bg"
         x="{{ pill_x }}" y="{{ tag_y }}"
         width="{{ pill_w }}" height="{{ tag_h }}"
-        rx="12"
-        fill="{{ c_tag_bg }}"/>
+        rx="{{ tag_rx }}"
+        fill="{{ style_tag.background_color }}"
+        stroke="{{ c_tag_border }}"
+        stroke-width="{{ style_tag.border_width }}"/>
   <text id="tag"
         x="{{ cx }}" y="{{ tag_y + (tag_h // 2) }}"
         font-family="{{ style_tag.font_family | safe }}"
         font-size="{{ style_tag.font_size }}" font-weight="{{ style_tag.font_weight }}"
-        fill="{{ c_tag_fg }}"
+        fill="{{ c_tag_text }}"
         text-anchor="middle"
         dominant-baseline="middle">{{ tag }}</text>
   {% endif %}
@@ -74,6 +71,7 @@
   <text id="title"
         font-family="{{ style_title.font_family | safe }}"
         font-size="{{ style_title.font_size }}" font-weight="{{ style_title.font_weight }}"
+        letter-spacing="{{ style_title.letter_spacing | default(0) }}"
         fill="{{ c_title }}"
         text-anchor="middle"
         dominant-baseline="hanging">

@@ -6,6 +6,7 @@ cairosvg==2.7.1
 
 # Image processing
 Pillow==11.1.0
+pillow-heif==0.21.0
 
 # Templating
 Jinja2==3.1.5

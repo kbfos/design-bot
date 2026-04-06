@@ -23,6 +23,7 @@ from PIL import Image, ImageFont
 from app.config import settings
 from app.services.card_spec import BackgroundMode, CardSpec
 from app.templates.engine import load_template_config, render_svg
+from app.utils.typography import fix_hanging_prepositions
 
 # Single universal template — all cards use this
 CARD_TEMPLATE_ID = "card_v1"
@@ -252,8 +253,8 @@ def _build_context(spec: CardSpec, has_bg_image: bool, template_config: dict) ->
 
     return {
         # ── Content ───────────────────────────────────────────────────────────
-        "title":    spec.title,
-        "subtitle": spec.subtitle or "",
+        "title":    fix_hanging_prepositions(spec.title),
+        "subtitle": fix_hanging_prepositions(spec.subtitle) if spec.subtitle else "",
         "tag":      spec.tag or "",
         # ── Theme info ────────────────────────────────────────────────────────
         "palette":     palette_name,

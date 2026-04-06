@@ -31,11 +31,45 @@ from app.services.card_spec import BackgroundMode, CardSpec, Palette, TextLayout
 from app.services.renderer import render_card
 from app.templates.engine import TemplateVariantNotFound
 
+from PIL import Image
+
 logger = logging.getLogger(__name__)
 router = Router()
 
-# Accepted MIME types for background image upload
-_ACCEPTED_MIME = {"image/png", "image/jpeg"}
+
+def _convert_to_png(src: Path) -> Path:
+    """Convert any Pillow-readable image to PNG. Deletes src if different from dst."""
+    if src.suffix.lower() in (".heic", ".heif"):
+        try:
+            import pillow_heif  # type: ignore
+            pillow_heif.register_heif_opener()
+        except ImportError:
+            pass  # pillow-heif not installed; Pillow will raise on open
+    dst = src.with_suffix(".png")
+    Image.open(src).convert("RGB").save(dst, "PNG")
+    if dst != src:
+        src.unlink(missing_ok=True)
+    return dst
+
+# MIME types accepted as background image upload
+# Native formats (no conversion needed by Pillow):
+_NATIVE_MIME = {"image/png", "image/jpeg"}
+# Formats requiring pillow-heif registration or are less common but Pillow-supported:
+_EXTRA_MIME  = {"image/heic", "image/heif", "image/webp", "image/bmp", "image/tiff"}
+_ALL_MIME    = _NATIVE_MIME | _EXTRA_MIME
+
+# MIME → file extension for saving the downloaded file
+_MIME_EXT: dict[str, str] = {
+    "image/png":  "png",
+    "image/jpeg": "jpg",
+    "image/heic": "heic",
+    "image/heif": "heif",
+    "image/webp": "webp",
+    "image/bmp":  "bmp",
+    "image/tiff": "tiff",
+}
+
+_FORMATS_HINT = "PNG, JPG, HEIC, WebP, BMP, TIFF"
 
 
 # ---------------------------------------------------------------------------
@@ -100,31 +134,38 @@ async def choose_gradient(callback: CallbackQuery, state: FSMContext) -> None:
 async def choose_photo(callback: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(CardWizard.waiting_for_photo)
     await callback.message.edit_text(
-        "Пришлите изображение как файл (Document).\n\n"
-        "📎 В Telegram: нажмите скрепку → Файл → выберите PNG или JPG.\n"
-        "Так изображение сохранит оригинальное качество."
+        f"Пришлите изображение как файл (Document).\n\n"
+        f"📎 В Telegram: нажмите скрепку → Файл → выберите изображение.\n"
+        f"Поддерживаются: {_FORMATS_HINT}."
     )
     await callback.answer()
 
 
-# Step 2b: приём документа (PNG / JPG)
+# Step 2b: приём документа (PNG / JPG / HEIC / WebP / …)
 @router.message(CardWizard.waiting_for_photo, F.document)
 async def receive_document(message: Message, state: FSMContext, bot: Bot) -> None:
     doc = message.document
     mime = doc.mime_type or ""
 
-    if mime not in _ACCEPTED_MIME:
+    if mime not in _ALL_MIME:
         await message.answer(
-            "Поддерживаются только PNG и JPG.\n"
-            "Пожалуйста, пришлите изображение как файл (Document)."
+            f"Неподдерживаемый формат.\n"
+            f"Пожалуйста, пришлите изображение как файл (Document).\n"
+            f"Поддерживаются: {_FORMATS_HINT}."
         )
         return
 
-    ext = "png" if mime == "image/png" else "jpg"
+    ext = _MIME_EXT.get(mime, "bin")
     tmp_path = settings.output_dir / f"tmp_{message.from_user.id}.{ext}"
 
     tg_file = await bot.get_file(doc.file_id)
     await bot.download_file(tg_file.file_path, destination=tmp_path)
+
+    # HEIC and other non-native formats: convert to PNG so Pillow compositor works reliably
+    if mime not in _NATIVE_MIME:
+        tmp_path = await asyncio.get_event_loop().run_in_executor(
+            None, _convert_to_png, tmp_path
+        )
 
     await state.update_data(bg_type="photo", bg_value=str(tmp_path))
     await state.set_state(CardWizard.choosing_format)
@@ -136,8 +177,8 @@ async def receive_document(message: Message, state: FSMContext, bot: Bot) -> Non
 async def photo_instead_of_document(message: Message) -> None:
     await message.answer(
         "Пожалуйста, отправьте изображение как файл, а не как фото.\n\n"
-        "📎 В Telegram: нажмите скрепку → Файл → выберите PNG или JPG.\n"
-        "Это сохранит оригинальное качество изображения."
+        f"📎 В Telegram: нажмите скрепку → Файл → выберите изображение.\n"
+        f"Поддерживаются: {_FORMATS_HINT}."
     )
 
 
@@ -145,8 +186,9 @@ async def photo_instead_of_document(message: Message) -> None:
 @router.message(CardWizard.waiting_for_photo)
 async def document_wrong_type(message: Message) -> None:
     await message.answer(
-        "Ожидаю PNG или JPG как файл (Document).\n"
-        "📎 Нажмите скрепку → Файл → выберите изображение."
+        f"Ожидаю изображение как файл (Document).\n"
+        f"📎 Нажмите скрепку → Файл → выберите изображение.\n"
+        f"Поддерживаются: {_FORMATS_HINT}."
     )
 
 
@@ -193,9 +235,9 @@ async def enter_title(message: Message, state: FSMContext) -> None:
     if not title:
         await message.answer("Заголовок не может быть пустым. Попробуйте ещё раз:")
         return
-    if len(title) > 120:
+    if len(title) > 90:
         await message.answer(
-            f"Заголовок слишком длинный ({len(title)} символов, максимум 120). "
+            f"Заголовок слишком длинный ({len(title)} символов, максимум 90). "
             "Попробуйте короче:"
         )
         return

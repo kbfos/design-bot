@@ -37,15 +37,16 @@
         "line_height":    104
       },
       "subtitle": {
-        "font_family": "Inter, Arial, sans-serif",
-        "font_weight": "400",
-        "font_size":   40,
-        "line_height": 48
+        "font_family": "'Suisse Int\\'l', Inter, Arial, sans-serif",
+        "font_weight": "300",
+        "font_size":   48,
+        "line_height": 62
       },
       "tag": {
-        "font_family": "Inter, Arial, sans-serif",
-        "font_weight": 400,
-        "font_size":   24
+        "font_family": "'Suisse Int\\'l', Inter, Arial, sans-serif",
+        "font_weight": "400",
+        "font_size":   24,
+        "line_height": 24
       }
     },
     "shape": {

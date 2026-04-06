@@ -82,8 +82,8 @@ class CardSpec(BaseModel):
         v = v.strip()
         if not v:
             raise ValueError("title cannot be empty")
-        if len(v) > 120:
-            raise ValueError(f"title max length is 120 characters, got {len(v)}")
+        if len(v) > 90:
+            raise ValueError(f"title max length is 90 characters, got {len(v)}")
         return v
 
     @field_validator("subtitle")

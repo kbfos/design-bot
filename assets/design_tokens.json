@@ -37,21 +37,21 @@
         "line_height":    104
       },
       "subtitle": {
-        "font_family": "'Suisse Int\\'l', Inter, Arial, sans-serif",
-        "font_weight": "300",
+        "font_family": "Suisse Int'l Light, Inter, Arial, sans-serif",
+        "font_weight": "normal",
         "font_size":   48,
         "line_height": 62
       },
       "tag": {
-        "font_family": "'Suisse Int\\'l', Inter, Arial, sans-serif",
-        "font_weight": "400",
+        "font_family": "Suisse Int'l Regular, Suisse Int'l, Inter, Arial, sans-serif",
+        "font_weight": "normal",
         "font_size":   24,
         "line_height": 24
       }
     },
     "shape": {
       "tag": {
-        "padding_h":    32,
+        "padding_h":    40,
         "padding_v":    16,
         "border_width": 2,
         "radius_mode":  "full",
@@ -68,7 +68,7 @@
     },
     "subtitle": {
       "$typography": "primitives.typography.subtitle",
-      "line_chars":  25,
+      "line_chars":  22,
       "max_lines":   2
     },
     "tag": {

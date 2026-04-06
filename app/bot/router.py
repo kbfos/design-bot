@@ -309,6 +309,7 @@ async def enter_tag(message: Message, state: FSMContext) -> None:
         path = await loop.run_in_executor(None, render_card, spec)
 
         png_bytes = path.read_bytes()
+        path.unlink(missing_ok=True)
         doc_file = BufferedInputFile(png_bytes, filename=path.name)
         await message.answer_document(doc_file)
 

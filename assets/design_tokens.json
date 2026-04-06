@@ -9,19 +9,19 @@
     "light": {
       "bg":       "#ffffff",
       "title":    "#111111",
-      "subtitle": "#555555"
+      "subtitle": "rgba(0,0,0,0.8)"
     },
     "dark": {
       "bg":               "#000000",
       "title":            "#ffffff",
-      "subtitle":         "#aaaaaa",
+      "subtitle":         "rgba(255,255,255,0.8)",
       "tag_border_color": "#ffffff",
       "tag_text_color":   "#ffffff"
     },
     "photo": {
       "overlay":          "rgba(0,0,0,0.5)",
       "title":            "#ffffff",
-      "subtitle":         "#dddddd",
+      "subtitle":         "rgba(255,255,255,0.8)",
       "tag_border_color": "#ffffff",
       "tag_text_color":   "#ffffff"
     }
@@ -63,8 +63,8 @@
   "components": {
     "title": {
       "$typography": "primitives.typography.title",
-      "line_chars":  18,
-      "max_lines":   3
+      "line_chars":  16,
+      "max_lines":   4
     },
     "subtitle": {
       "$typography": "primitives.typography.subtitle",

@@ -37,14 +37,14 @@
         "line_height":    104
       },
       "subtitle": {
-        "font_family": "Inter, sans-serif",
-        "font_weight": "300",
+        "font_family": "Inter Light, Inter, sans-serif",
+        "font_weight": "normal",
         "font_size":   48,
         "line_height": 62
       },
       "tag": {
         "font_family": "Inter, sans-serif",
-        "font_weight": "400",
+        "font_weight": "normal",
         "font_size":   24,
         "line_height": 24
       }
@@ -69,7 +69,7 @@
     "subtitle": {
       "$typography": "primitives.typography.subtitle",
       "line_chars":  22,
-      "max_lines":   2
+      "max_lines":   3
     },
     "tag": {
       "$typography": "primitives.typography.tag",
